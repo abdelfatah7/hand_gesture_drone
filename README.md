@@ -176,22 +176,6 @@ hand_gesture_drone/
 
 ---
 
-## 🔧 Key Engineering Decisions
-
-**Velocity control over position control**
-Early versions used position setpoints which caused the drone to snap to fixed coordinates instead of moving smoothly. Switching to velocity setpoints means the drone moves continuously while a gesture is held and stops naturally when released.
-
-**Gesture smoothing via majority vote**
-Raw gesture classification fluctuates frame-to-frame. A 12-frame sliding window majority vote filter eliminates false triggers from accidental hand movement without adding noticeable latency.
-
-**Re-arm after landing**
-PX4 exits Offboard mode after landing. The controller detects this and automatically re-arms and re-enters Offboard when the next takeoff gesture is detected — no need to restart the node.
-
-**No NAV_LAND command**
-Using `VEHICLE_CMD_NAV_LAND` exits Offboard mode permanently in the same session. Instead, landing is handled by sending a downward velocity setpoint until the estimated altitude reaches zero.
-
----
-
 ## 📡 ROS 2 Topics
 
 | Topic | Direction | Message Type | Description |
@@ -200,28 +184,6 @@ Using `VEHICLE_CMD_NAV_LAND` exits Offboard mode permanently in the same session
 | `/fmu/in/trajectory_setpoint` | Publish | `TrajectorySetpoint` | Velocity commands [vx, vy, vz] |
 | `/fmu/in/vehicle_command` | Publish | `VehicleCommand` | ARM / mode switch commands |
 | `/fmu/out/vehicle_status` | Subscribe | `VehicleStatus` | Monitor arming state and nav mode |
-
----
-
-## 🐛 Troubleshooting
-
-| Problem | Likely Cause | Fix |
-|---------|-------------|-----|
-| `mediapipe has no attribute 'solutions'` | numpy version conflict | `pip install "numpy<2" mediapipe==0.10.9` |
-| Drone doesn't take off | Not in Offboard mode | Wait for "OFFBOARD sent" in terminal before gesturing |
-| Drone spins on ground after land | NAV_LAND exits Offboard | Already fixed in v6 — uses velocity landing |
-| Gesture keeps switching | Poor lighting or hand too close | Improve lighting, keep hand 40–60 cm from camera |
-| Camera not found | Wrong camera index | Change `camera_index=0` to `1` or `2` in `drone_controller.py` |
-
----
-
-## 🔮 Future Work
-
-- [ ] Add forward/backward control (2-finger gesture)
-- [ ] Integrate with YOLOv8 for autonomous threat detection patrol
-- [ ] Replace estimated altitude with actual PX4 altitude feedback
-- [ ] Add gesture confirmation (hold N frames before executing LAND)
-- [ ] Support real hardware via companion computer
 
 ---
 
